@@ -157,6 +157,8 @@ bool is_time_limit_over() {
 }
 
 void solve() {
+
+    // a, b を左上に動かす
     rep(i, N) {
         ans[i].a--;
         ans[i].b--;
@@ -183,6 +185,38 @@ void solve() {
         if (flg) {
             ans[i].a++;
             ans[i].b++;
+        } else {
+            ans[i].update_area();
+        }
+    }
+
+    // c,d を右下に動かす
+    rep(i, N) {
+        ans[i].c++;
+        ans[i].d++;
+        if (ans[i].c >= H || ans[i].d >= W) {
+            ans[i].c--;
+            ans[i].d--;
+            continue;
+        }
+        // 要望のサイズを超えたら更新を止める
+        if (ans[i].s - points[i].first.first > 0) {
+            ans[i].c--;
+            ans[i].d--;
+            continue;
+        }
+        bool flg = false;
+        rep(j, N) {
+            if (i == j) continue;
+            if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                flg = true;
+                break;
+            }
+        }
+
+        if (flg) {
+            ans[i].c--;
+            ans[i].d--;
         } else {
             ans[i].update_area();
         }

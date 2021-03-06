@@ -156,7 +156,8 @@ bool is_time_limit_over() {
     return (time > 4.0);
 }
 
-void move_to_left_up() {
+bool move_to_left_up() {
+    int cnt = 0;
     rep(i, N) {
         ans[i].a--;
         ans[i].b--;
@@ -185,11 +186,14 @@ void move_to_left_up() {
             ans[i].b++;
         } else {
             ans[i].update_area();
+            cnt++;
         }
     }
+    return cnt > 0;
 }
 
-void move_to_right_down() {
+bool move_to_right_down() {
+    int cnt = 0;
     rep(i, N) {
         ans[i].c++;
         ans[i].d++;
@@ -218,17 +222,21 @@ void move_to_right_down() {
             ans[i].d--;
         } else {
             ans[i].update_area();
+            cnt++;
         }
     }
+    return cnt > 0;
 }
 
-void solve() {
+bool solve_first_step() {
 
     // a, b を左上に動かす
-    move_to_left_up();
+    bool result = move_to_left_up();
     
     // c,d を右下に動かす
-    move_to_right_down();
+    result |= move_to_right_down();
+
+    return !result
 }
 
 int main() {
@@ -240,8 +248,13 @@ int main() {
     map_to_base_points();
 
     //solver
+    bool first_step_finished = false
     while(!is_time_limit_over()){
-        solve();
+        if (!first_step_finished) {
+            first_step_finished = solve_first_step();
+        } else {
+
+        }
     }
 
     output();

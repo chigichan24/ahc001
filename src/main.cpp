@@ -232,7 +232,6 @@ bool move_to_right_down() {
     }
     return cnt > 0;
 }
- 
 bool move_to_left_down() {
     int cnt = 0;
     rep(i, N) {
@@ -257,7 +256,7 @@ bool move_to_left_down() {
                 break;
             }
         }
- 
+
         if (flg) {
             ans[i].a++;
             ans[i].d--;
@@ -268,7 +267,7 @@ bool move_to_left_down() {
     }
     return cnt > 0;
 }
- 
+
 bool move_to_right_up() {
     int cnt = 0;
     rep(i, N) {
@@ -293,7 +292,7 @@ bool move_to_right_up() {
                 break;
             }
         }
- 
+
         if (flg) {
             ans[i].c--;
             ans[i].b++;
@@ -304,7 +303,7 @@ bool move_to_right_up() {
     }
     return cnt > 0;
 }
- 
+
 bool move_to_left() {
     int cnt = 0;
     rep(i, N) {
@@ -443,15 +442,6 @@ bool solve_second_step() {
  
 bool solve_first_step() {
  
-    // 左上に動かす
-    bool result = move_to_left_up();
-    // 右下に動かす
-    result |= move_to_right_down();
-    // 右上に動かす
-    result |= move_to_right_up();
-    // 左下に動かす
-    result |= move_to_left_down();
- 
     if (rand_first_step(mt) == 0) {
         rep(i,50){
             solve_second_step();
@@ -462,7 +452,7 @@ bool solve_first_step() {
  
     return !result;
 }
- 
+
 int main() {
     
     start_time = clock();

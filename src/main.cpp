@@ -157,38 +157,34 @@ bool is_time_limit_over() {
 }
 
 void solve() {
-    while(!is_time_limit_over()){
-        rep(i, N) {
-            ans[i].a--;
-            ans[i].b--;
-            if (ans[i].a < 0 || ans[i].b < 0) {
-                ans[i].a++;
-                ans[i].b++;
-                continue;
+    rep(i, N) {
+        ans[i].a--;
+        ans[i].b--;
+        if (ans[i].a < 0 || ans[i].b < 0) {
+            ans[i].a++;
+            ans[i].b++;
+            continue;
+        }
+        // 要望のサイズを超えたら更新を止める
+        if (ans[i].s - points[i].first.first > 0) {
+            ans[i].a++;
+            ans[i].b++;
+            continue;
+        }
+        bool flg = false;
+        rep(j, N) {
+            if (i == j) continue;
+            if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                flg = true;
+                break;
             }
-            /*
-            // これ入れると高くなると思ったけどだめっぽい
-            if (ans[i].s - points[ans[i].idnex_points].first.first > 0) {
-                ans[i].a++;
-                ans[i].b++;
-                continue;
-            }*/
-            bool flg = false;
-            rep(j, N) {
-                if (i == j) continue;
-                if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
-                    flg = true;
-                    break;
-                }
-            }
+        }
 
-            if (flg) {
-                ans[i].a++;
-                ans[i].b++;
-            } else {
-                ans[i].update_area();
-            }
-
+        if (flg) {
+            ans[i].a++;
+            ans[i].b++;
+        } else {
+            ans[i].update_area();
         }
     }
 }
@@ -202,7 +198,9 @@ int main() {
     map_to_base_points();
 
     //solver
-    solve();
+    while(!is_time_limit_over()){
+        solve();
+    }
 
     output();
 }

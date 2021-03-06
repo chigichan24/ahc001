@@ -228,6 +228,136 @@ bool move_to_right_down() {
     return cnt > 0;
 }
 
+bool move_to_left() {
+    int cnt = 0;
+    rep(i, N) {
+        ans[i].a--;
+        if (ans[i].a < 0) {
+            ans[i].a++;
+            continue;
+        }
+        // 要望のサイズを超えたら更新を止める
+        if (ans[i].s - points[i].first.first > 0) {
+            ans[i].a++;
+            continue;
+        }
+        bool flg = false;
+        rep(j, N) {
+            if (i == j) continue;
+            if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                flg = true;
+                break;
+            }
+        }
+
+        if (flg) {
+            ans[i].a++;
+        } else {
+            ans[i].update_area();
+            cnt++;
+        }
+    }
+    return cnt > 0;
+}
+
+bool move_to_right() {
+    int cnt = 0;
+    rep(i, N) {
+        ans[i].c++;
+        if (ans[i].c >= H) {
+            ans[i].c--;
+            continue;
+        }
+        // 要望のサイズを超えたら更新を止める
+        if (ans[i].s - points[i].first.first > 0) {
+            ans[i].c--;
+            continue;
+        }
+        bool flg = false;
+        rep(j, N) {
+            if (i == j) continue;
+            if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                flg = true;
+                break;
+            }
+        }
+
+        if (flg) {
+            ans[i].c--;
+        } else {
+            ans[i].update_area();
+            cnt++;
+        }
+    }
+    return cnt > 0;
+}
+
+bool move_to_up() {
+    int cnt = 0;
+    rep(i, N) {
+        ans[i].b--;
+        if (ans[i].b < 0) {
+            ans[i].b++;
+            continue;
+        }
+        // 要望のサイズを超えたら更新を止める
+        if (ans[i].s - points[i].first.first > 0) {
+            ans[i].b++;
+            continue;
+        }
+        bool flg = false;
+        rep(j, N) {
+            if (i == j) continue;
+            if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                flg = true;
+                break;
+            }
+        }
+
+        if (flg) {
+            ans[i].b++;
+        } else {
+            ans[i].update_area();
+            cnt++;
+        }
+    }
+    return cnt > 0;
+}
+
+bool move_to_down() {
+    int cnt = 0;
+    rep(i, N) {
+        ans[i].d++;
+        if (ans[i].d >= W) {
+            ans[i].d--;
+            continue;
+        }
+        // 要望のサイズを超えたら更新を止める
+        if (ans[i].s - points[i].first.first > 0) {
+            ans[i].d--;
+            continue;
+        }
+        bool flg = false;
+        rep(j, N) {
+            if (i == j) continue;
+            if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                flg = true;
+                break;
+            }
+        }
+
+        if (flg) {
+            ans[i].d--;
+        } else {
+            ans[i].update_area();
+            cnt++;
+        }
+    }
+    return cnt > 0;
+}
+
+
+
 bool solve_first_step() {
 
     // a, b を左上に動かす
@@ -236,7 +366,14 @@ bool solve_first_step() {
     // c,d を右下に動かす
     result |= move_to_right_down();
 
-    return !result
+    return !result;
+}
+
+void solve_second_step() {
+    move_to_right();
+    move_to_down();
+    move_to_left();
+    move_to_up();
 }
 
 int main() {
@@ -248,12 +385,12 @@ int main() {
     map_to_base_points();
 
     //solver
-    bool first_step_finished = false
+    bool first_step_finished = false;
     while(!is_time_limit_over()){
         if (!first_step_finished) {
             first_step_finished = solve_first_step();
         } else {
-
+            solve_second_step();
         }
     }
 

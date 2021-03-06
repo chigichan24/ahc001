@@ -156,9 +156,7 @@ bool is_time_limit_over() {
     return (time > 4.0);
 }
 
-void solve() {
-
-    // a, b を左上に動かす
+void move_to_left_up() {
     rep(i, N) {
         ans[i].a--;
         ans[i].b--;
@@ -189,8 +187,9 @@ void solve() {
             ans[i].update_area();
         }
     }
+}
 
-    // c,d を右下に動かす
+void move_to_right_down() {
     rep(i, N) {
         ans[i].c++;
         ans[i].d++;
@@ -221,6 +220,15 @@ void solve() {
             ans[i].update_area();
         }
     }
+}
+
+void solve() {
+
+    // a, b を左上に動かす
+    move_to_left_up();
+    
+    // c,d を右下に動かす
+    move_to_right_down();
 }
 
 int main() {

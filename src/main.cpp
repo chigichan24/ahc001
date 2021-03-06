@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <cassert>
+#include <ctime>
 
 using namespace std;
 
@@ -25,7 +26,7 @@ ostream& operator<<(ostream &out, const vector<T> &v){
 int N;
 vector< vector < int > > memo(10000, vector<int>(10000, 0));
 vector< pair< pair<int,int>, pair<int,int> > > points; // s, base_index, y, x
-
+clock_t start_time;
 
 struct result {
     // x-axis [a, c)
@@ -52,10 +53,10 @@ struct result {
     }
 
     result(pair<int,int> x, pair<int,int> y) {
-        this->a = x.first;
-        this->b = x.second;
-        this->c = y.first;
-        this->d = y.second;
+        this->a = x.second;
+        this->b = x.first;
+        this->c = y.second;
+        this->d = y.first;
     }
 
     bool update_area() {
@@ -91,6 +92,10 @@ struct result {
         pair<int, int> r = make_pair(point_a.first, point_b.second);
         pair<int, int> s = make_pair(point_b.first, point_a.second);
         return (is_contains(p) || is_contains(q) || is_contains(r) || is_contains(s));
+    }
+
+    bool is_contains(const result &r) {
+        return is_contains(make_pair(r.b, r.a), make_pair(r.d, r.c));
     }
 
     bool operator<(const result &a)const {
@@ -142,14 +147,62 @@ void output() {
     m_assert(ans.size() == N, "Insert all ad?");
     sort(ans.begin(), ans.end());
     rep(i, N) {
-        printf("%d %d %d %d\n", ans[i].b, ans[i].a, ans[i].d, ans[i].c);
+        printf("%d %d %d %d\n", ans[i].a, ans[i].b, ans[i].c, ans[i].d);
+    }
+}
+
+bool is_time_limit_over() {
+    double time = static_cast<double> (clock()-start_time) / CLOCKS_PER_SEC * 1.0;
+    return (time > 4.0);
+}
+
+void solve() {
+    while(!is_time_limit_over()){
+        rep(i, N) {
+            ans[i].a--;
+            ans[i].b--;
+            if (ans[i].a < 0 || ans[i].b < 0) {
+                ans[i].a++;
+                ans[i].b++;
+                continue;
+            }
+            /*
+            // これ入れると高くなると思ったけどだめっぽい
+            if (ans[i].s - points[ans[i].idnex_points].first.first > 0) {
+                ans[i].a++;
+                ans[i].b++;
+                continue;
+            }*/
+            bool flg = false;
+            rep(j, N) {
+                if (i == j) continue;
+                if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                    flg = true;
+                    break;
+                }
+            }
+
+            if (flg) {
+                ans[i].a++;
+                ans[i].b++;
+            } else {
+                ans[i].update_area();
+            }
+
+        }
     }
 }
 
 int main() {
+    
+    start_time = clock();
+
     handle_inputs();
 
     map_to_base_points();
+
+    //solver
+    solve();
 
     output();
 }

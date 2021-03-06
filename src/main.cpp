@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <cassert>
+#include <ctime>
 
 using namespace std;
 
@@ -25,7 +26,7 @@ ostream& operator<<(ostream &out, const vector<T> &v){
 int N;
 vector< vector < int > > memo(10000, vector<int>(10000, 0));
 vector< pair< pair<int,int>, pair<int,int> > > points; // s, base_index, y, x
-
+clock_t start_time;
 
 struct result {
     // x-axis [a, c)
@@ -150,8 +151,13 @@ void output() {
     }
 }
 
+bool is_time_limit_over() {
+    double time = static_cast<double> (clock()-start_time) / CLOCKS_PER_SEC * 1.0;
+    return (time > 4.0);
+}
+
 void solve() {
-    rep(q,10000){
+    while(!is_time_limit_over()){
         rep(i, N) {
             ans[i].a--;
             ans[i].b--;
@@ -160,6 +166,13 @@ void solve() {
                 ans[i].b++;
                 continue;
             }
+            /*
+            // これ入れると高くなると思ったけどだめっぽい
+            if (ans[i].s - points[ans[i].idnex_points].first.first > 0) {
+                ans[i].a++;
+                ans[i].b++;
+                continue;
+            }*/
             bool flg = false;
             rep(j, N) {
                 if (i == j) continue;
@@ -172,6 +185,8 @@ void solve() {
             if (flg) {
                 ans[i].a++;
                 ans[i].b++;
+            } else {
+                ans[i].update_area();
             }
 
         }
@@ -179,6 +194,9 @@ void solve() {
 }
 
 int main() {
+    
+    start_time = clock();
+
     handle_inputs();
 
     map_to_base_points();

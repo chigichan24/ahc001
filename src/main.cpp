@@ -6,14 +6,14 @@
 #include <ctime>
 
 using namespace std;
-
+ 
 #define reps(i,j,k) for(int i = j; i < k; ++i)
 #define rep(i,j) reps(i,0,j)
 #define W 10001
 #define H 10001
 #define INF 100000000
 #define m_assert(expr, msg) assert(( (void)(msg), (expr) ))
-
+ 
 template<class T>
 ostream& operator<<(ostream &out, const vector<T> &v){
 	out << "{";
@@ -22,16 +22,21 @@ ostream& operator<<(ostream &out, const vector<T> &v){
 	}
 	return out << "}" << endl;
 }
-
+ 
 int N;
 vector< vector < int > > memo(10000, vector<int>(10000, 0));
 vector< pair< pair<int,int>, pair<int,int> > > points; // s, base_index, y, x
 clock_t start_time;
-
+ 
+ 
+random_device rnd;
+mt19937 mt(rnd());
+uniform_int_distribution<int> rand_first_step(0,4); 
+ 
 struct result {
     // x-axis [a, c)
     // y-axis [b, d)
-
+ 
     int a, b, c, d;
     int idnex_points;
     int s;
@@ -51,41 +56,41 @@ struct result {
         this->d = d;
         this->s = (c-a) * (d-b);
     }
-
+ 
     result(pair<int,int> x, pair<int,int> y) {
         this->a = x.second;
         this->b = x.first;
         this->c = y.second;
         this->d = y.first;
     }
-
+ 
     bool update_area() {
         this->s = ((this->c)-(this->a)) * ((this->d)-(this->b));
-
+ 
         if ((this->c)-(this->a) < 0) return false;
         if ((this->d)-(this->b) < 0) return false;
         return true;
     }
-
+ 
     bool update_target(int idx) {
         if (idx < 0 || idx > N-1) return false;
         this->idnex_points = idx;
         return true;
     }
-
+ 
     bool is_contains(int y, int x) {
         return is_contains(make_pair(y, x));
     }
-
+ 
     bool is_contains(pair<int, int> point) {
         m_assert((0 <= point.first && point.first < H), "Illegal coordinate. negative value or over 10000");
         m_assert((0 <= point.second && point.second < W), "Illegal coordinate. negative value or over 10000");
-
+ 
         if (a > point.second || point.second >= c) return false;
         if (b > point.first || point.first >= d) return false;
         return true;
     }
-
+ 
     bool is_contains(pair<int, int> point_a, pair<int, int> point_b) {
         pair<int, int> p = point_a;
         pair<int, int> q = point_b;
@@ -93,19 +98,19 @@ struct result {
         pair<int, int> s = make_pair(point_b.first, point_a.second);
         return (is_contains(p) || is_contains(q) || is_contains(r) || is_contains(s));
     }
-
+ 
     bool is_contains(const result &r) {
         return is_contains(make_pair(r.b, r.a), make_pair(r.d, r.c));
     }
-
+ 
     bool operator<(const result &a)const {
         return this->idnex_points < a.idnex_points;
     }
 };
-
+ 
 // general inputs
 vector<result> ans;
-
+ 
 void handle_inputs() {
     scanf("%d", &N);
     rep(i,N) {
@@ -113,16 +118,16 @@ void handle_inputs() {
         scanf("%d%d%d", &x, &y, &r);
         points.emplace_back(make_pair(make_pair(r, i), make_pair(y, x)));
     }
-
+ 
     // test handle inputs
     assert(points.size() == N);
-
+ 
     // sort with requested area size
     sort(points.begin(), points.end(), greater< pair< pair<int,int> ,pair<int,int> > >());
 }
-
+ 
 void map_to_base_points() {
-
+ 
     rep(i, N) {
         bool flg = false;
         pair<int, int> p = points[i].second;
@@ -142,7 +147,7 @@ void map_to_base_points() {
         ans.emplace_back(rst);
     }
 }
-
+ 
 void output() {
     m_assert(ans.size() == N, "Insert all ad?");
     sort(ans.begin(), ans.end());
@@ -150,12 +155,12 @@ void output() {
         printf("%d %d %d %d\n", ans[i].a, ans[i].b, ans[i].c, ans[i].d);
     }
 }
-
+ 
 bool is_time_limit_over() {
     double time = static_cast<double> (clock()-start_time) / CLOCKS_PER_SEC * 1.0;
     return (time > 4.0);
 }
-
+ 
 bool move_to_left_up() {
     int cnt = 0;
     rep(i, N) {
@@ -180,7 +185,7 @@ bool move_to_left_up() {
                 break;
             }
         }
-
+ 
         if (flg) {
             ans[i].a++;
             ans[i].b++;
@@ -191,7 +196,7 @@ bool move_to_left_up() {
     }
     return cnt > 0;
 }
-
+ 
 bool move_to_right_down() {
     int cnt = 0;
     rep(i, N) {
@@ -216,7 +221,7 @@ bool move_to_right_down() {
                 break;
             }
         }
-
+ 
         if (flg) {
             ans[i].c--;
             ans[i].d--;
@@ -227,7 +232,79 @@ bool move_to_right_down() {
     }
     return cnt > 0;
 }
-
+ 
+bool move_to_left_down() {
+    int cnt = 0;
+    rep(i, N) {
+        ans[i].a--;
+        ans[i].d++;
+        if (ans[i].a < 0 || ans[i].d >= W) {
+            ans[i].a++;
+            ans[i].d--;
+            continue;
+        }
+        // 要望のサイズを超えたら更新を止める
+        if (ans[i].s - points[i].first.first > 0) {
+            ans[i].a++;
+            ans[i].d--;
+            continue;
+        }
+        bool flg = false;
+        rep(j, N) {
+            if (i == j) continue;
+            if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                flg = true;
+                break;
+            }
+        }
+ 
+        if (flg) {
+            ans[i].a++;
+            ans[i].d--;
+        } else {
+            ans[i].update_area();
+            cnt++;
+        }
+    }
+    return cnt > 0;
+}
+ 
+bool move_to_right_up() {
+    int cnt = 0;
+    rep(i, N) {
+        ans[i].b--;
+        ans[i].c++;
+        if (ans[i].c >= H || ans[i].b < 0) {
+            ans[i].c--;
+            ans[i].b++;
+            continue;
+        }
+        // 要望のサイズを超えたら更新を止める
+        if (ans[i].s - points[i].first.first > 0) {
+            ans[i].c--;
+            ans[i].b++;
+            continue;
+        }
+        bool flg = false;
+        rep(j, N) {
+            if (i == j) continue;
+            if (ans[j].is_contains(ans[i]) || ans[i].is_contains(ans[j])) {
+                flg = true;
+                break;
+            }
+        }
+ 
+        if (flg) {
+            ans[i].c--;
+            ans[i].b++;
+        } else {
+            ans[i].update_area();
+            cnt++;
+        }
+    }
+    return cnt > 0;
+}
+ 
 bool move_to_left() {
     int cnt = 0;
     rep(i, N) {
@@ -249,7 +326,7 @@ bool move_to_left() {
                 break;
             }
         }
-
+ 
         if (flg) {
             ans[i].a++;
         } else {
@@ -259,7 +336,7 @@ bool move_to_left() {
     }
     return cnt > 0;
 }
-
+ 
 bool move_to_right() {
     int cnt = 0;
     rep(i, N) {
@@ -281,7 +358,7 @@ bool move_to_right() {
                 break;
             }
         }
-
+ 
         if (flg) {
             ans[i].c--;
         } else {
@@ -291,7 +368,7 @@ bool move_to_right() {
     }
     return cnt > 0;
 }
-
+ 
 bool move_to_up() {
     int cnt = 0;
     rep(i, N) {
@@ -313,7 +390,7 @@ bool move_to_up() {
                 break;
             }
         }
-
+ 
         if (flg) {
             ans[i].b++;
         } else {
@@ -323,7 +400,7 @@ bool move_to_up() {
     }
     return cnt > 0;
 }
-
+ 
 bool move_to_down() {
     int cnt = 0;
     rep(i, N) {
@@ -345,7 +422,7 @@ bool move_to_down() {
                 break;
             }
         }
-
+ 
         if (flg) {
             ans[i].d--;
         } else {
@@ -355,45 +432,58 @@ bool move_to_down() {
     }
     return cnt > 0;
 }
-
-
-
-bool solve_first_step() {
-
-    // a, b を左上に動かす
-    bool result = move_to_left_up();
-    
-    // c,d を右下に動かす
-    result |= move_to_right_down();
-
+ 
+bool solve_second_step() {
+    bool result = move_to_right();
+    result |= move_to_down();
+    result |= move_to_left();
+    result |= move_to_up();
     return !result;
 }
-
-void solve_second_step() {
-    move_to_right();
-    move_to_down();
-    move_to_left();
-    move_to_up();
+ 
+bool solve_first_step() {
+ 
+    // 左上に動かす
+    bool result = move_to_left_up();
+    // 右下に動かす
+    result |= move_to_right_down();
+    // 右上に動かす
+    result |= move_to_right_up();
+    // 左下に動かす
+    result |= move_to_left_down();
+ 
+    if (rand_first_step(mt) == 0) {
+        rep(i,50){
+            solve_second_step();
+        }
+        
+    }
+ 
+ 
+    return !result;
 }
-
+ 
 int main() {
     
     start_time = clock();
-
+ 
     handle_inputs();
-
+ 
     map_to_base_points();
-
+ 
     //solver
     bool first_step_finished = false;
     while(!is_time_limit_over()){
         if (!first_step_finished) {
             first_step_finished = solve_first_step();
         } else {
-            solve_second_step();
+            bool ret = solve_second_step();
+            if (ret) {
+                break;
+            }
         }
     }
-
+ 
     output();
     return 0;
 }

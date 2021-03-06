@@ -1,0 +1,1 @@
+puts File.foreach("result.out").map(&:to_i).sum

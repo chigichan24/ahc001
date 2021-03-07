@@ -13,6 +13,7 @@ using namespace std;
 #define W 10001
 #define H 10001
 #define INF 100000000
+#define SQUARE_MARGIN -0.2
 #define m_assert(expr, msg) assert(( (void)(msg), (expr) ))
 
 template<class T>
@@ -41,6 +42,7 @@ struct result {
     int a, b, c, d;
     int idnex_points;
     int s;
+    int r;
     result() {
         this->a = -1;
         this->b = -1;
@@ -48,6 +50,7 @@ struct result {
         this->d = -1;
         this->idnex_points = -1;
         this->s = -1;
+        this->r = -1;
     }
     
     result(int a, int b, int c, int d) {
@@ -55,7 +58,8 @@ struct result {
         this->b = b;
         this->c = c;
         this->d = d;
-        this->s = (c-a) * (d-b);
+        bool ret = update_area();
+        m_assert(ret, "negative area is invalid");
     }
 
     result(pair<int,int> x, pair<int,int> y) {
@@ -63,13 +67,15 @@ struct result {
         this->b = x.first;
         this->c = y.second;
         this->d = y.first;
+        bool ret = update_area();
+        m_assert(ret, "negative area is invalid");
     }
 
     bool update_area() {
+        
+        m_assert((this->c)-(this->a) >= 0, "c-a must be positive value");
+        m_assert((this->d)-(this->b) >= 0, "d-b must be positive value");
         this->s = ((this->c)-(this->a)) * ((this->d)-(this->b));
-
-        if ((this->c)-(this->a) < 0) return false;
-        if ((this->d)-(this->b) < 0) return false;
         return true;
     }
 
@@ -133,25 +139,58 @@ void map_to_base_points() {
         bool flg = false;
         pair<int, int> p = points[i].second;
         pair<int, int> q = make_pair(points[i].second.first+1, points[i].second.second+1);
-        /*
-        // これは必ず通る。
-        rep(j, i) {
-            if (ans[j].is_contains(p, q)) {
-                flg = true;
-                break;
-            }
-        }
-        assert(!flg);
-        */
         result rst = result(p, q);
         rst.idnex_points = points[i].first.second;
+        m_assert(rst.update_area(), "initial setup was wrong");
+        rst.r = points[i].first.first;
         ans.emplace_back(rst);
+    }
+}
+
+
+double eval_ad(int s, int r) {
+    m_assert(s>=0, "negative area s is not enough");
+    m_assert(r>=0, "negative area r is not enough");
+    double q = 1.0 - ((double)min(r,s)/(double)max(r,s));
+    double p = 1.0 - q*q;
+    return p;
+}
+
+void tune_detail(result &rst) {
+    // current
+    double s_eval = eval_ad(rst.s, rst.r);
+
+    // y - 1
+    double t_eval = eval_ad(rst.s - (rst.c - rst.a), rst.r);
+
+    // x - 1
+    double u_eval = eval_ad(rst.s - (rst.d - rst.b), rst.r);
+
+    // y - 1 x - 1
+    double v_eval = eval_ad(rst.s - (rst.d - rst.b) - (rst.c - rst.a) - 1, rst.r);
+
+    if (rst.s <= 2) {
+        return ;
+    }
+
+    if (s_eval > t_eval && s_eval > u_eval && v_eval) {
+        ;
+    } else if (t_eval > s_eval && t_eval > u_eval && t_eval > v_eval) {
+        rst.a++;
+    } else if (u_eval > s_eval && u_eval > t_eval && u_eval > v_eval){
+        rst.b++;
+    } else {
+        rst.a++;
+        rst.b++;
     }
 }
 
 void output() {
     m_assert(ans.size() == N, "Insert all ad?");
     sort(ans.begin(), ans.end());
+    rep(i, N) {
+        tune_detail(ans[i]);
+    }
     rep(i, N) {
         printf("%d %d %d %d\n", ans[i].a, ans[i].b, ans[i].c, ans[i].d);
     }
@@ -173,7 +212,10 @@ bool move_to_left_up() {
             continue;
         }
         // 要望のサイズを超えたら更新を止める
-        if (ans[i].s - points[i].first.first > 0) {
+        m_assert(ans[i].c-ans[i].a >= 0, "c-a must be positive value");
+        m_assert(ans[i].d-ans[i].b >= 0, "d-b must be positive value");
+        m_assert(ans[i].s >= 0, "s must be positive value");
+        if (eval_ad((ans[i].c-ans[i].a)*(ans[i].d-ans[i].b), ans[i].r)+SQUARE_MARGIN < eval_ad(ans[i].s, ans[i].r)) {
             ans[i].a++;
             ans[i].b++;
             continue;
@@ -208,8 +250,11 @@ bool move_to_right_down() {
             ans[i].d--;
             continue;
         }
+        m_assert(ans[i].c-ans[i].a >= 0, "c-a must be positive value");
+        m_assert(ans[i].d-ans[i].b >= 0, "d-b must be positive value");
+        m_assert(ans[i].s >= 0, "s must be positive value");
         // 要望のサイズを超えたら更新を止める
-        if (ans[i].s - points[i].first.first > 0) {
+        if (eval_ad((ans[i].c-ans[i].a)*(ans[i].d-ans[i].b), ans[i].r)+SQUARE_MARGIN < eval_ad(ans[i].s, ans[i].r)) {
             ans[i].c--;
             ans[i].d--;
             continue;
@@ -244,8 +289,11 @@ bool move_to_left_down() {
             ans[i].d--;
             continue;
         }
+        m_assert(ans[i].c-ans[i].a >= 0, "c-a must be positive value");
+        m_assert(ans[i].d-ans[i].b >= 0, "d-b must be positive value");
+        m_assert(ans[i].s >= 0, "s must be positive value");
         // 要望のサイズを超えたら更新を止める
-        if (ans[i].s - points[i].first.first > 0) {
+        if (eval_ad((ans[i].c-ans[i].a)*(ans[i].d-ans[i].b), ans[i].r)+SQUARE_MARGIN < eval_ad(ans[i].s, ans[i].r))  {
             ans[i].a++;
             ans[i].d--;
             continue;
@@ -280,8 +328,11 @@ bool move_to_right_up() {
             ans[i].b++;
             continue;
         }
+        m_assert(ans[i].c-ans[i].a >= 0, "c-a must be positive value");
+        m_assert(ans[i].d-ans[i].b >= 0, "d-b must be positive value");
+        m_assert(ans[i].s >= 0, "s must be positive value");
         // 要望のサイズを超えたら更新を止める
-        if (ans[i].s - points[i].first.first > 0) {
+        if (eval_ad((ans[i].c-ans[i].a)*(ans[i].d-ans[i].b), ans[i].r)+SQUARE_MARGIN < eval_ad(ans[i].s, ans[i].r))  {
             ans[i].c--;
             ans[i].b++;
             continue;
@@ -315,7 +366,7 @@ bool move_to_left() {
             continue;
         }
         // 要望のサイズを超えたら更新を止める
-        if (ans[i].s - points[i].first.first > 0) {
+        if (eval_ad((ans[i].c-ans[i].a)*(ans[i].d-ans[i].b), ans[i].r) < eval_ad(ans[i].s, ans[i].r)) {
             ans[i].a++;
             continue;
         }
@@ -347,7 +398,7 @@ bool move_to_right() {
             continue;
         }
         // 要望のサイズを超えたら更新を止める
-        if (ans[i].s - points[i].first.first > 0) {
+        if (eval_ad((ans[i].c-ans[i].a)*(ans[i].d-ans[i].b), ans[i].r) < eval_ad(ans[i].s, ans[i].r)) {
             ans[i].c--;
             continue;
         }
@@ -379,7 +430,7 @@ bool move_to_up() {
             continue;
         }
         // 要望のサイズを超えたら更新を止める
-        if (ans[i].s - points[i].first.first > 0) {
+        if (eval_ad((ans[i].c-ans[i].a)*(ans[i].d-ans[i].b), ans[i].r) < eval_ad(ans[i].s, ans[i].r)) {
             ans[i].b++;
             continue;
         }
@@ -411,7 +462,7 @@ bool move_to_down() {
             continue;
         }
         // 要望のサイズを超えたら更新を止める
-        if (ans[i].s - points[i].first.first > 0) {
+        if (eval_ad((ans[i].c-ans[i].a)*(ans[i].d-ans[i].b), ans[i].r) < eval_ad(ans[i].s, ans[i].r)) {
             ans[i].d--;
             continue;
         }
@@ -463,6 +514,7 @@ bool solve_first_step() {
 
     return !result;
 }
+
 
 int main() {
     

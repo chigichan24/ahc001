@@ -1,3 +1,4 @@
 a.out
 *.svg
 result.out
+out/*.out
